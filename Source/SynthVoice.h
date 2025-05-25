@@ -1,9 +1,9 @@
 /*
   ==============================================================================
 
-    SynthVoice.h
-    Created: 22 Mar 2025 4:20:59pm
-    Author:  jrrro
+	SynthVoice.h
+	Created: 22 Mar 2025 4:20:59pm
+	Author:  jrrro
 
   ==============================================================================
 */
@@ -25,13 +25,22 @@ public:
 	void prepareToPlay(double sampleRate, int samplesPerBlock, int outputChannels);
 	void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
 	void setGain(float newGain);
+	void setOscillatorWaveform(int type);
+	juce::ADSR& getADSR() { return adsr; }
 
 private:
 	juce::ADSR adsr;
 	juce::ADSR::Parameters adsrParams;
-
-	juce::dsp::Oscillator<float> osc{ [](float x) { return std::sin(x); } };
+	enum WaveformType {
+		Sine = 0,
+		Square,
+		Saw,
+		Triangle
+	};
+	juce::dsp::Oscillator<float> osc;
 	juce::dsp::Gain<float> gain;
+
+
 
 	bool isPrepared{ false };
 };

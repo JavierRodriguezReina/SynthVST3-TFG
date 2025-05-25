@@ -13,21 +13,21 @@
 bool SynthVoice::canPlaySound(juce::SynthesiserSound* sound) {
     return dynamic_cast<juce::SynthesiserSound*>(sound) != nullptr;
 }
-void SynthVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition) 
+void SynthVoice::startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition)
 {
     osc.setFrequency(juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber));
     adsr.noteOn();
-	
+
 }
-void SynthVoice::stopNote(float velocity, bool allowTailOff) 
+void SynthVoice::stopNote(float velocity, bool allowTailOff)
 {
-	adsr.noteOff();
+    adsr.noteOff();
 }
 void SynthVoice::controllerMoved(int controllerNumber, int newControllerValue) {}
 void SynthVoice::pitchWheelMoved(int newPitchWheelValue) {}
-void SynthVoice::prepareToPlay(double sampleRate, int samplesPerBlock, int outputCannels) 
+void SynthVoice::prepareToPlay(double sampleRate, int samplesPerBlock, int outputCannels)
 {
-	adsr.setSampleRate(sampleRate);
+    adsr.setSampleRate(sampleRate);
 
     juce::dsp::ProcessSpec spec;
     spec.maximumBlockSize = samplesPerBlock;
@@ -38,21 +38,45 @@ void SynthVoice::prepareToPlay(double sampleRate, int samplesPerBlock, int outpu
     gain.prepare(spec);
 
     gain.setGainLinear(0.01f);
+    setOscillatorWaveform(0);
 
-	isPrepared = true;
+    isPrepared = true;
 }
-void SynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) 
+void SynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
 {
-	jassert(isPrepared);
+    jassert(isPrepared);
 
     juce::dsp::AudioBlock<float> audioBlock{ outputBuffer };
     osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
-	adsr.applyEnvelopeToBuffer(outputBuffer,startSample,numSamples);
+    adsr.applyEnvelopeToBuffer(outputBuffer, startSample, numSamples);
 }
 
-void SynthVoice::setGain(float newGain) 
+void SynthVoice::setGain(float newGain)
 {
     gain.setGainLinear(newGain);
+}
+
+void SynthVoice::setOscillatorWaveform(int type)
+{
+    switch (type)
+    {
+    case Sine:
+        osc.initialise([](float x) { return std::sin(x); }, 128);
+        break;
+    case Square:
+        osc.initialise([](float x) { return x < 0.0f ? -1.0f : 1.0f; }, 128);
+        break;
+    case Saw:
+        osc.initialise([](float x) { return x / juce::MathConstants<float>::pi; }, 128);
+        break;
+    case Triangle:
+        osc.initialise([](float x) {
+            return std::asin(std::sin(x)) * (2.0f / juce::MathConstants<float>::pi);
+            }, 128);
+        break;
+    default:
+        break;
+    }
 }

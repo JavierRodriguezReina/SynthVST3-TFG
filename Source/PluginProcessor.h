@@ -15,7 +15,7 @@
 //==============================================================================
 /**
 */
-class SynthAudioProcessor  : public juce::AudioProcessor
+class SynthAudioProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
@@ -23,14 +23,14 @@ public:
     ~SynthAudioProcessor() override;
 
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+#ifndef JucePlugin_PreferredChannelConfigurations
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+#endif
 
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -47,21 +47,27 @@ public:
     //==============================================================================
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
+    void changeProgramName(int index, const juce::String& newName) override;
 
     //==============================================================================
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(juce::MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
     void setVolume(float newVolume);
     float getCurrentVolume() const { return currentVolume; }
     void setCurrentVolume(float volume);
+	//Esto es para cambiar el tipo de onda del oscilador
+    void setWaveformType(int type);
+	int getCurrentWaveform() const { return currentWaveform; }
+    void setCurrentWaveform(int waveformType);
+    void updateADSR(float attack, float decay, float sustain, float release);
 
 private:
     juce::Synthesiser synth;
     float currentVolume = 0.5f;
+    int currentWaveform = 0;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SynthAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessor)
 };
