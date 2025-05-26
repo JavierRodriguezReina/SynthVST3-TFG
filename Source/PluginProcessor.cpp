@@ -191,6 +191,12 @@ void SynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 	// Guardar el tipo de onda actual en el estado
     state.setProperty("waveform", currentWaveform, nullptr);
 
+	// Guardar los parámetros ADSR en el estado
+	state.setProperty("attack", currentAttack, nullptr);
+	state.setProperty("decay", currentDecay, nullptr);
+	state.setProperty("sustain", currentSustain, nullptr);
+	state.setProperty("release", currentRelease, nullptr);
+
     // Serializar el ValueTree a un MemoryBlock
     juce::MemoryOutputStream stream(destData, true);
     state.writeToStream(stream);
@@ -213,6 +219,16 @@ void SynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
         int waveform = (int)state["waveform"];
         setCurrentWaveform(waveform);
     }
+    if (state.hasProperty("attack") && state.hasProperty("decay") &&
+        state.hasProperty("sustain") && state.hasProperty("release"))
+    {
+		float attack = (float)state["attack"];
+		float decay = (float)state["decay"];
+		float sustain = (float)state["sustain"];
+		float release = (float)state["release"];
+		setADSRParameters(attack, decay, sustain, release);  // Actualizar ADSR
+    }
+
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
@@ -228,12 +244,11 @@ void SynthAudioProcessor::setCurrentVolume(float volume)
 
 void SynthAudioProcessor::setVolume(float volume)
 {
-    // Cambia el volumen de todas las voces del sintetizador
     for (int i = 0; i < synth.getNumVoices(); ++i)
     {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
         {
-            voice->setGain(volume);  // Ajusta la ganancia de la voz
+            voice->setGain(volume);  
         }
     }
 }
@@ -255,9 +270,20 @@ void SynthAudioProcessor::setCurrentWaveform(int waveformType)
     setWaveformType(waveformType); // Propagar a voces
 }
 
+void SynthAudioProcessor::setADSRParameters(float attack, float decay, float sustain, float release) {
 
+    currentAttack = attack;
+    currentDecay = decay;
+    currentSustain = sustain;
+    currentRelease = release;
+
+	updateADSR(attack, decay, sustain, release); // Actualizar ADSR en todas las voces
+
+}
 void SynthAudioProcessor::updateADSR(float attack, float decay, float sustain, float release)
 {
+	// Actualizar los parámetros ADSR de todas las voces del sintetizador
+
     for (int i = 0; i < synth.getNumVoices(); ++i)
     {
         if (auto* voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
@@ -268,6 +294,17 @@ void SynthAudioProcessor::updateADSR(float attack, float decay, float sustain, f
             adsrParams.sustain = sustain;
             adsrParams.release = release;
             voice->getADSR().setParameters(adsrParams);
+        }
+    }
+}
+
+void SynthAudioProcessor::updateReverb(float roomSize, float damping, float wet, float dry, float width, float freeze)
+{
+    for (int i = 0; i < synth.getNumVoices(); ++i)
+    {
+        if (auto* voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
+        {
+            voice->setReverbParams(roomSize, damping, wet, dry, width, freeze);
         }
     }
 }

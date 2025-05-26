@@ -40,6 +40,8 @@ void SynthVoice::prepareToPlay(double sampleRate, int samplesPerBlock, int outpu
     gain.setGainLinear(0.01f);
     setOscillatorWaveform(0);
 
+    reverb.prepare(spec);
+
     isPrepared = true;
 }
 void SynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples)
@@ -49,8 +51,8 @@ void SynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int sta
     juce::dsp::AudioBlock<float> audioBlock{ outputBuffer };
     osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-
     adsr.applyEnvelopeToBuffer(outputBuffer, startSample, numSamples);
+    reverb.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 }
 
 void SynthVoice::setGain(float newGain)
@@ -79,4 +81,14 @@ void SynthVoice::setOscillatorWaveform(int type)
     default:
         break;
     }
+}
+void SynthVoice::setReverbParams(float roomSize, float damping, float wetLevel, float dryLevel, float width, float freeze)
+{
+    reverbParams.roomSize = roomSize;
+    reverbParams.damping = damping;
+    reverbParams.wetLevel = wetLevel;
+    reverbParams.dryLevel = dryLevel;
+    reverbParams.width = width;
+    reverbParams.freezeMode = freeze;
+    reverb.setParameters(reverbParams);
 }

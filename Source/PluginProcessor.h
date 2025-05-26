@@ -61,12 +61,26 @@ public:
     void setWaveformType(int type);
 	int getCurrentWaveform() const { return currentWaveform; }
     void setCurrentWaveform(int waveformType);
+	// Métodos para ADSR
+    void setADSRParameters(float attack, float decay, float sustain, float release);
     void updateADSR(float attack, float decay, float sustain, float release);
+	float getCurrentAttack() const { return currentAttack; }
+	float getCurrentDecay() const { return currentDecay; }
+	float getCurrentSustain() const { return currentSustain; }
+	float getCurrentRelease() const { return currentRelease; }
+    // Metodos para Reverb
+    void updateReverb(float roomSize, float damping, float wet, float dry, float width, float freeze);
+
 
 private:
     juce::Synthesiser synth;
     float currentVolume = 0.5f;
     int currentWaveform = 0;
+
+	float currentAttack = 0.1f;
+	float currentDecay = 0.1f;
+	float currentSustain = 1.0f;
+	float currentRelease = 0.4f;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessor)

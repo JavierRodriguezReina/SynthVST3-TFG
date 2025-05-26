@@ -27,6 +27,7 @@ public:
 	void setGain(float newGain);
 	void setOscillatorWaveform(int type);
 	juce::ADSR& getADSR() { return adsr; }
+	void setReverbParams(float roomSize, float damping, float wetLevel, float dryLevel, float width, float freeze);
 
 private:
 	juce::ADSR adsr;
@@ -39,6 +40,10 @@ private:
 	};
 	juce::dsp::Oscillator<float> osc;
 	juce::dsp::Gain<float> gain;
+
+	juce::dsp::Reverb reverb;
+	juce::dsp::Reverb::Parameters reverbParams;
+	bool reverbEnabled = true;
 
 
 
