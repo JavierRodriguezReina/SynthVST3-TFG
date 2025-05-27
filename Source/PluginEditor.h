@@ -33,7 +33,6 @@ private:
     juce::Slider sustainSlider;
     juce::Slider releaseSlider;
 
-
     juce::Label attackLabel;
     juce::Label decayLabel;
     juce::Label sustainLabel;
@@ -42,7 +41,7 @@ private:
 
     juce::Slider reverbRoomSlider, reverbDampingSlider, reverbWetSlider, reverbDrySlider, reverbWidthSlider, reverbFreezeSlider;
     juce::Label reverbRoomLabel, reverbDampingLabel, reverbWetLabel, reverbDryLabel, reverbWidthLabel, reverbFreezeLabel;
-    juce::ToggleButton reverbToggleButton;
+    juce::ToggleButton reverbToggleButton{ "Enable Reverb" };
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessorEditor)

@@ -298,6 +298,18 @@ void SynthAudioProcessor::updateADSR(float attack, float decay, float sustain, f
     }
 }
 
+void SynthAudioProcessor::setReverbParameters(float roomSize, float damping, float wet, float dry, float width, float freeze) 
+{
+	currentRoomSize = roomSize;
+	currentDamping = damping;
+	currentWetLevel = wet;
+	currentDryLevel = dry;
+	currentWidth = width;
+	currentFreeze = freeze;
+	updateReverb(roomSize, damping, wet, dry, width, freeze); // Actualizar reverb en todas las voces
+}
+
+
 void SynthAudioProcessor::updateReverb(float roomSize, float damping, float wet, float dry, float width, float freeze)
 {
     for (int i = 0; i < synth.getNumVoices(); ++i)
@@ -305,6 +317,22 @@ void SynthAudioProcessor::updateReverb(float roomSize, float damping, float wet,
         if (auto* voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
         {
             voice->setReverbParams(roomSize, damping, wet, dry, width, freeze);
+        }
+    }
+}
+
+void SynthAudioProcessor::setReverbEnabled(bool shouldEnable)
+{
+	reverbEnabled = shouldEnable;
+	setReverbEnabledForAllVoices(shouldEnable); // Propagar el cambio a todas las voces
+}
+void SynthAudioProcessor::setReverbEnabledForAllVoices(bool shouldEnable)
+{
+    for (int i = 0; i < synth.getNumVoices(); ++i)
+    {
+        if (auto* voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
+        {
+            voice->setReverbEnabled(shouldEnable);
         }
     }
 }

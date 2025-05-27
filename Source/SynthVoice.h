@@ -28,6 +28,7 @@ public:
 	void setOscillatorWaveform(int type);
 	juce::ADSR& getADSR() { return adsr; }
 	void setReverbParams(float roomSize, float damping, float wetLevel, float dryLevel, float width, float freeze);
+	void setReverbEnabled(bool shouldEnable);
 
 private:
 	juce::ADSR adsr;

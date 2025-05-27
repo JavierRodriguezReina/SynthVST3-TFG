@@ -63,12 +63,12 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
         label.setJustificationType(juce::Justification::centred);
         };
 
-    configureReverbSlider(reverbRoomSlider, reverbRoomLabel, "Room Size", 0.0f, 1.0f, 0.5f);
-    configureReverbSlider(reverbDampingSlider, reverbDampingLabel, "Damping", 0.0f, 1.0f, 0.5f);
-    configureReverbSlider(reverbWetSlider, reverbWetLabel, "Wet Level", 0.0f, 1.0f, 0.3f);
-    configureReverbSlider(reverbDrySlider, reverbDryLabel, "Dry Level", 0.0f, 1.0f, 0.7f);
-    configureReverbSlider(reverbWidthSlider, reverbWidthLabel, "Width", 0.0f, 1.0f, 1.0f);
-    configureReverbSlider(reverbFreezeSlider, reverbFreezeLabel, "Freeze", 0.0f, 1.0f, 0.0f);
+    configureReverbSlider(reverbRoomSlider, reverbRoomLabel, "Room Size", 0.0f, 1.0f, audioProcessor.getCurrentRoomSize());
+    configureReverbSlider(reverbDampingSlider, reverbDampingLabel, "Damping", 0.0f, 1.0f, audioProcessor.getCurrentDamping());
+    configureReverbSlider(reverbWetSlider, reverbWetLabel, "Wet Level", 0.0f, 1.0f, audioProcessor.getCurrentWetLevel());
+    configureReverbSlider(reverbDrySlider, reverbDryLabel, "Dry Level", 0.0f, 1.0f, audioProcessor.getCurrentDryLevel());
+    configureReverbSlider(reverbWidthSlider, reverbWidthLabel, "Width", 0.0f, 1.0f, audioProcessor.getCurrentWidth());
+    configureReverbSlider(reverbFreezeSlider, reverbFreezeLabel, "Freeze", 0.0f, 1.0f, audioProcessor.getCurrentFreeze());
 
     for (auto* s : { &reverbRoomSlider, &reverbDampingSlider, &reverbWetSlider, &reverbDrySlider, &reverbWidthSlider, &reverbFreezeSlider }) {
         s->addListener(this);
@@ -78,6 +78,13 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     for (auto* l : { &reverbRoomLabel, &reverbDampingLabel, &reverbWetLabel, &reverbDryLabel, &reverbWidthLabel, &reverbFreezeLabel }) {
         addAndMakeVisible(*l);
     }
+
+    addAndMakeVisible(reverbToggleButton);
+    reverbToggleButton.setToggleState(audioProcessor.getReverbEnabled(), juce::dontSendNotification);
+    reverbToggleButton.onClick = [this]() {
+        bool isOn = reverbToggleButton.getToggleState();
+        audioProcessor.setReverbEnabled(isOn);
+        };
 }
 
 //==============================================================================
@@ -126,6 +133,8 @@ void SynthAudioProcessorEditor::resized()
     int reverbRow2Y = reverbRow1Y + reverbSliderSize + 30;
     int reverbStartX = 20;
 
+    reverbToggleButton.setBounds(400, 70, 150, 25);
+
     auto placeReverbSlider = [reverbSliderSize](juce::Slider& s, juce::Label& l, int x, int y) {
         s.setBounds(x, y, reverbSliderSize, reverbSliderSize);
         l.setBounds(x, y + reverbSliderSize, reverbSliderSize, 20);
@@ -157,13 +166,18 @@ void SynthAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
             releaseSlider.getValue()
         );
     }
-
-    audioProcessor.updateReverb(
-        reverbRoomSlider.getValue(),
-        reverbDampingSlider.getValue(),
-        reverbWetSlider.getValue(),
-        reverbDrySlider.getValue(),
-        reverbWidthSlider.getValue(),
-        reverbFreezeSlider.getValue()
-    );
+	if (slider == &reverbRoomSlider || slider == &reverbDampingSlider ||
+		slider == &reverbWetSlider || slider == &reverbDrySlider ||
+		slider == &reverbWidthSlider || slider == &reverbFreezeSlider)
+	{
+        audioProcessor.setReverbParameters(
+            reverbRoomSlider.getValue(),
+            reverbDampingSlider.getValue(),
+            reverbWetSlider.getValue(),
+            reverbDrySlider.getValue(),
+            reverbWidthSlider.getValue(),
+            reverbFreezeSlider.getValue()
+        );
+	}
+   
 }

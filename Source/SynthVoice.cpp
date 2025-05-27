@@ -52,7 +52,8 @@ void SynthVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int sta
     osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     adsr.applyEnvelopeToBuffer(outputBuffer, startSample, numSamples);
-    reverb.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    if (reverbEnabled)
+        reverb.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 }
 
 void SynthVoice::setGain(float newGain)
@@ -91,4 +92,9 @@ void SynthVoice::setReverbParams(float roomSize, float damping, float wetLevel, 
     reverbParams.width = width;
     reverbParams.freezeMode = freeze;
     reverb.setParameters(reverbParams);
+}
+
+void SynthVoice::setReverbEnabled(bool shouldEnable)
+{
+    reverbEnabled = shouldEnable;
 }

@@ -70,6 +70,17 @@ public:
 	float getCurrentRelease() const { return currentRelease; }
     // Metodos para Reverb
     void updateReverb(float roomSize, float damping, float wet, float dry, float width, float freeze);
+    void setReverbParameters(float roomSize, float damping, float wet, float dry, float width, float freeze);
+	void setReverbEnabled(bool shouldEnable);
+    void setReverbEnabledForAllVoices(bool shouldEnable);
+    float getCurrentRoomSize() { return currentRoomSize;}
+    float getCurrentDamping() { return currentDamping;}
+    float getCurrentWetLevel() { return currentWetLevel;}
+    float getCurrentDryLevel() { return currentDryLevel;}
+    float getCurrentWidth() { return currentWidth;}
+    float getCurrentFreeze() { return currentFreeze;}
+	bool getReverbEnabled() const { return reverbEnabled; }
+    
 
 
 private:
@@ -81,6 +92,16 @@ private:
 	float currentDecay = 0.1f;
 	float currentSustain = 1.0f;
 	float currentRelease = 0.4f;
+
+	float currentRoomSize = 0.5f;
+	float currentDamping = 0.5f;
+	float currentWetLevel = 0.3f;
+	float currentDryLevel = 0.7f;
+	float currentWidth = 1.0f;
+	float currentFreeze = 0.0f;
+	bool reverbEnabled = true;
+
+    
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessor)
