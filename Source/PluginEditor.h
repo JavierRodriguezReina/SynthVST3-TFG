@@ -43,6 +43,13 @@ private:
     juce::Label reverbRoomLabel, reverbDampingLabel, reverbWetLabel, reverbDryLabel, reverbWidthLabel, reverbFreezeLabel;
     juce::ToggleButton reverbToggleButton{ "Enable Reverb" };
 
+    juce::Label waveformTitleLabel;
+    juce::Label adsrTitleLabel;
+    juce::Label reverbTitleLabel;
+
+    juce::Font customFont;
+
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessorEditor)
 };

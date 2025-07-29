@@ -47,6 +47,5 @@ private:
 	bool reverbEnabled = true;
 
 
-
 	bool isPrepared{ false };
 };

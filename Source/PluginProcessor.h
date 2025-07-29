@@ -54,15 +54,15 @@ public:
     //==============================================================================
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
-    void setVolume(float newVolume);
+    void updateVolume(float newVolume);
     float getCurrentVolume() const { return currentVolume; }
     void setCurrentVolume(float volume);
 	//Esto es para cambiar el tipo de onda del oscilador
-    void setWaveformType(int type);
+    void updateWaveformType(int type);
 	int getCurrentWaveform() const { return currentWaveform; }
     void setCurrentWaveform(int waveformType);
 	// Métodos para ADSR
-    void setADSRParameters(float attack, float decay, float sustain, float release);
+    void setCurrentADSRParameters(float attack, float decay, float sustain, float release);
     void updateADSR(float attack, float decay, float sustain, float release);
 	float getCurrentAttack() const { return currentAttack; }
 	float getCurrentDecay() const { return currentDecay; }
@@ -70,7 +70,7 @@ public:
 	float getCurrentRelease() const { return currentRelease; }
     // Metodos para Reverb
     void updateReverb(float roomSize, float damping, float wet, float dry, float width, float freeze);
-    void setReverbParameters(float roomSize, float damping, float wet, float dry, float width, float freeze);
+    void setCurrentReverbParameters(float roomSize, float damping, float wet, float dry, float width, float freeze);
 	void setReverbEnabled(bool shouldEnable);
     void setReverbEnabledForAllVoices(bool shouldEnable);
     float getCurrentRoomSize() { return currentRoomSize;}
@@ -80,12 +80,16 @@ public:
     float getCurrentWidth() { return currentWidth;}
     float getCurrentFreeze() { return currentFreeze;}
 	bool getReverbEnabled() const { return reverbEnabled; }
+
     
 
 
 private:
     juce::Synthesiser synth;
+
+
     float currentVolume = 0.5f;
+
     int currentWaveform = 0;
 
 	float currentAttack = 0.1f;
@@ -100,6 +104,7 @@ private:
 	float currentWidth = 1.0f;
 	float currentFreeze = 0.0f;
 	bool reverbEnabled = true;
+
 
     
 

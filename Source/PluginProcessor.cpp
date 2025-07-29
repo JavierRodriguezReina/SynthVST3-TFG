@@ -188,14 +188,23 @@ void SynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 
     // Guardar el valor del volumen en el estado
     state.setProperty("volume", currentVolume, nullptr);
-	// Guardar el tipo de onda actual en el estado
+    // Guardar el tipo de onda actual en el estado
     state.setProperty("waveform", currentWaveform, nullptr);
 
-	// Guardar los parámetros ADSR en el estado
-	state.setProperty("attack", currentAttack, nullptr);
-	state.setProperty("decay", currentDecay, nullptr);
-	state.setProperty("sustain", currentSustain, nullptr);
-	state.setProperty("release", currentRelease, nullptr);
+    // Guardar los parámetros ADSR en el estado
+    state.setProperty("attack", currentAttack, nullptr);
+    state.setProperty("decay", currentDecay, nullptr);
+    state.setProperty("sustain", currentSustain, nullptr);
+    state.setProperty("release", currentRelease, nullptr);
+
+    // Guardar parámetros de reverb
+    state.setProperty("roomSize", currentRoomSize, nullptr);
+    state.setProperty("damping", currentDamping, nullptr);
+    state.setProperty("wetLevel", currentWetLevel, nullptr);
+    state.setProperty("dryLevel", currentDryLevel, nullptr);
+    state.setProperty("width", currentWidth, nullptr);
+    state.setProperty("freeze", currentFreeze, nullptr);
+    state.setProperty("reverbEnabled", reverbEnabled, nullptr);
 
     // Serializar el ValueTree a un MemoryBlock
     juce::MemoryOutputStream stream(destData, true);
@@ -211,7 +220,7 @@ void SynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
     if (state.hasProperty("volume"))
     {
         float volume = (float)state["volume"];
-        setCurrentVolume(volume);  // Usa el setter para propagar el cambio
+        setCurrentVolume(volume);  
     }
 
     if (state.hasProperty("waveform"))
@@ -222,11 +231,29 @@ void SynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
     if (state.hasProperty("attack") && state.hasProperty("decay") &&
         state.hasProperty("sustain") && state.hasProperty("release"))
     {
-		float attack = (float)state["attack"];
-		float decay = (float)state["decay"];
-		float sustain = (float)state["sustain"];
-		float release = (float)state["release"];
-		setADSRParameters(attack, decay, sustain, release);  // Actualizar ADSR
+        float attack = (float)state["attack"];
+        float decay = (float)state["decay"];
+        float sustain = (float)state["sustain"];
+        float release = (float)state["release"];
+        setCurrentADSRParameters(attack, decay, sustain, release);  
+    }
+    if (state.hasProperty("roomSize") && state.hasProperty("damping") &&
+        state.hasProperty("wetLevel") && state.hasProperty("dryLevel") &&
+        state.hasProperty("width") && state.hasProperty("freeze"))
+    {
+        setCurrentReverbParameters(
+            (float)state["roomSize"],
+            (float)state["damping"],
+            (float)state["wetLevel"],
+            (float)state["dryLevel"],
+            (float)state["width"],
+            (float)state["freeze"]
+        );
+    }
+
+    if (state.hasProperty("reverbEnabled"))
+    {
+        setReverbEnabled((bool)state["reverbEnabled"]);
     }
 
 }
@@ -239,21 +266,29 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void SynthAudioProcessor::setCurrentVolume(float volume)
 {
     currentVolume = volume;  // Establecer el valor de currentVolume
-    setVolume(currentVolume);  // Propagar el cambio a las voces del sintetizador
+    updateVolume(currentVolume);  // Propagar el cambio a las voces del sintetizador
 }
 
-void SynthAudioProcessor::setVolume(float volume)
+void SynthAudioProcessor::updateVolume(float volume)
 {
     for (int i = 0; i < synth.getNumVoices(); ++i)
     {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
         {
-            voice->setGain(volume);  
+            voice->setGain(volume);
         }
     }
 }
 
-void SynthAudioProcessor::setWaveformType(int type)
+
+void SynthAudioProcessor::setCurrentWaveform(int waveformType)
+{
+    currentWaveform = waveformType;
+    updateWaveformType(waveformType); // Propagar a voces
+}
+
+
+void SynthAudioProcessor::updateWaveformType(int type)
 {
     for (int i = 0; i < synth.getNumVoices(); ++i)
     {
@@ -264,25 +299,21 @@ void SynthAudioProcessor::setWaveformType(int type)
     }
 }
 
-void SynthAudioProcessor::setCurrentWaveform(int waveformType)
-{
-    currentWaveform = waveformType;
-    setWaveformType(waveformType); // Propagar a voces
-}
 
-void SynthAudioProcessor::setADSRParameters(float attack, float decay, float sustain, float release) {
+
+void SynthAudioProcessor::setCurrentADSRParameters(float attack, float decay, float sustain, float release) {
 
     currentAttack = attack;
     currentDecay = decay;
     currentSustain = sustain;
     currentRelease = release;
 
-	updateADSR(attack, decay, sustain, release); // Actualizar ADSR en todas las voces
+    updateADSR(attack, decay, sustain, release); // Actualizar ADSR en todas las voces
 
 }
 void SynthAudioProcessor::updateADSR(float attack, float decay, float sustain, float release)
 {
-	// Actualizar los parámetros ADSR de todas las voces del sintetizador
+    // Actualizar los parámetros ADSR de todas las voces del sintetizador
 
     for (int i = 0; i < synth.getNumVoices(); ++i)
     {
@@ -298,15 +329,15 @@ void SynthAudioProcessor::updateADSR(float attack, float decay, float sustain, f
     }
 }
 
-void SynthAudioProcessor::setReverbParameters(float roomSize, float damping, float wet, float dry, float width, float freeze) 
+void SynthAudioProcessor::setCurrentReverbParameters(float roomSize, float damping, float wet, float dry, float width, float freeze)
 {
-	currentRoomSize = roomSize;
-	currentDamping = damping;
-	currentWetLevel = wet;
-	currentDryLevel = dry;
-	currentWidth = width;
-	currentFreeze = freeze;
-	updateReverb(roomSize, damping, wet, dry, width, freeze); // Actualizar reverb en todas las voces
+    currentRoomSize = roomSize;
+    currentDamping = damping;
+    currentWetLevel = wet;
+    currentDryLevel = dry;
+    currentWidth = width;
+    currentFreeze = freeze;
+    updateReverb(roomSize, damping, wet, dry, width, freeze); // Actualizar reverb en todas las voces
 }
 
 
@@ -323,8 +354,8 @@ void SynthAudioProcessor::updateReverb(float roomSize, float damping, float wet,
 
 void SynthAudioProcessor::setReverbEnabled(bool shouldEnable)
 {
-	reverbEnabled = shouldEnable;
-	setReverbEnabledForAllVoices(shouldEnable); // Propagar el cambio a todas las voces
+    reverbEnabled = shouldEnable;
+    setReverbEnabledForAllVoices(shouldEnable); // Propagar el cambio a todas las voces
 }
 void SynthAudioProcessor::setReverbEnabledForAllVoices(bool shouldEnable)
 {

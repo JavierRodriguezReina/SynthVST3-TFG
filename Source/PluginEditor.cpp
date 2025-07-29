@@ -5,7 +5,12 @@
 SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
-    setSize(620, 500);  // Tamaño aumentado para caber todos los controles cómodamente
+    setSize(620, 500); 
+    
+    auto typeface = juce::Typeface::createSystemTypefaceFor(BinaryData::TrashHand_TTF, BinaryData::TrashHand_TTFSize);
+    customFont = juce::Font(typeface).withHeight(24.0f);
+    customFont.setHeight(24.0f);
+    // Tamaño aumentado para caber todos los controles cómodamente
 
     // ==== VOLUMEN ====
     volumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
@@ -27,22 +32,19 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     addAndMakeVisible(waveformSelector);
 
     // ==== ADSR SLIDERS ====
-    auto configureSlider = [](juce::Slider& slider, juce::Label& label, const juce::String& name) {
+    auto configureADSRSlider = [](juce::Slider& slider, juce::Label& label, const juce::String& name, float min, float max, float init) {
         slider.setSliderStyle(juce::Slider::Rotary);
         slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+        slider.setRange(min, max, 0.01f);
+        slider.setValue(init);
         label.setText(name, juce::dontSendNotification);
         label.setJustificationType(juce::Justification::centred);
         };
 
-    configureSlider(attackSlider, attackLabel, "Attack");
-    configureSlider(decaySlider, decayLabel, "Decay");
-    configureSlider(sustainSlider, sustainLabel, "Sustain");
-    configureSlider(releaseSlider, releaseLabel, "Release");
-
-    attackSlider.setRange(0.01, 5.0, 0.01);     attackSlider.setValue(audioProcessor.getCurrentAttack());
-    decaySlider.setRange(0.01, 5.0, 0.01);      decaySlider.setValue(audioProcessor.getCurrentDecay());
-    sustainSlider.setRange(0.0, 1.0, 0.01);     sustainSlider.setValue(audioProcessor.getCurrentSustain());
-    releaseSlider.setRange(0.01, 5.0, 0.01);    releaseSlider.setValue(audioProcessor.getCurrentRelease());
+    configureADSRSlider(attackSlider, attackLabel, "Attack", 0.01f, 5.0f, audioProcessor.getCurrentAttack());
+    configureADSRSlider(decaySlider, decayLabel, "Decay", 0.01f, 5.0f, audioProcessor.getCurrentDecay());
+    configureADSRSlider(sustainSlider, sustainLabel, "Sustain", 0.0f, 1.0f, audioProcessor.getCurrentSustain());
+    configureADSRSlider(releaseSlider, releaseLabel, "Release", 0.01f, 5.0f, audioProcessor.getCurrentRelease());
 
     for (auto* s : { &attackSlider, &decaySlider, &sustainSlider, &releaseSlider }) {
         s->addListener(this);
@@ -52,7 +54,6 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     for (auto* l : { &attackLabel, &decayLabel, &sustainLabel, &releaseLabel }) {
         addAndMakeVisible(*l);
     }
-
     // ==== REVERB SLIDERS ====
     auto configureReverbSlider = [](juce::Slider& slider, juce::Label& label, const juce::String& name, float min, float max, float init) {
         slider.setSliderStyle(juce::Slider::Rotary);
@@ -85,6 +86,39 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
         bool isOn = reverbToggleButton.getToggleState();
         audioProcessor.setReverbEnabled(isOn);
         };
+
+    // === ESTILO VERDE CHILLÓN ===
+    juce::Colour neonGreen = juce::Colours::limegreen;
+
+    auto setSliderGreenStyle = [neonGreen](juce::Slider& slider) {
+        slider.setColour(juce::Slider::thumbColourId, neonGreen);
+        slider.setColour(juce::Slider::trackColourId, neonGreen);
+        slider.setColour(juce::Slider::rotarySliderFillColourId, neonGreen);
+        };
+
+    auto setLabelGreenStyle = [neonGreen](juce::Label& label) {
+        label.setColour(juce::Label::textColourId, neonGreen);
+        };
+
+    reverbToggleButton.setColour(juce::ToggleButton::textColourId, neonGreen);
+    waveformSelector.setColour(juce::ComboBox::textColourId, neonGreen);
+    waveformSelector.setColour(juce::ComboBox::outlineColourId, neonGreen);
+
+    for (auto* s : { &attackSlider, &decaySlider, &sustainSlider, &releaseSlider,
+                     &reverbRoomSlider, &reverbDampingSlider, &reverbWetSlider,
+                     &reverbDrySlider, &reverbWidthSlider, &reverbFreezeSlider, &volumeSlider }) {
+        setSliderGreenStyle(*s);
+    }
+
+    for (auto* l : { &attackLabel, &decayLabel, &sustainLabel, &releaseLabel,
+                     &reverbRoomLabel, &reverbDampingLabel, &reverbWetLabel,
+                     &reverbDryLabel, &reverbWidthLabel, &reverbFreezeLabel }) {
+        setLabelGreenStyle(*l);
+    }
+    addAndMakeVisible(waveformTitleLabel);
+    addAndMakeVisible(adsrTitleLabel);
+    addAndMakeVisible(reverbTitleLabel);
+
 }
 
 //==============================================================================
@@ -93,27 +127,57 @@ SynthAudioProcessorEditor::~SynthAudioProcessorEditor() {}
 void SynthAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
+
     g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(18.0f, juce::Font::bold));
-    g.drawFittedText("TFG Synth Plugin", getLocalBounds().removeFromTop(30), juce::Justification::centredTop, 1);
+    g.setFont(juce::Font("Arial", 24.0f, juce::Font::bold));  // Más grande y con estilo
+
+    juce::Rectangle<int> titleArea = getLocalBounds().withTop(15).withHeight(40); // Margen superior de 15
+    g.drawFittedText("TFG Synth Plugin", titleArea, juce::Justification::centredTop, 1);
+	g.setFont(customFont);
 }
 
 void SynthAudioProcessorEditor::resized()
 {
-    const int margin = 10;
-    const int labelWidth = 70;
-    const int controlHeight = 25;
 
-    // Volumen y forma de onda
-    volumeSlider.setBounds(labelWidth, 40, getWidth() - labelWidth - margin, controlHeight);
-    waveformSelector.setBounds(labelWidth, 70, 150, controlHeight);
+    const int margin = 20;
+    const int controlHeight = 30;
+    const int titleHeight = 25;
 
-    // ADSR Sliders
-    int adsrTop = 120;
-    int adsrSliderSize = 80;
-    int adsrSpacing = 20;
+    // Títulos
+    waveformTitleLabel.setText("Controles de Volumen y Forma de Onda", juce::dontSendNotification);
+	waveformTitleLabel.setFont(customFont);
+    adsrTitleLabel.setText("Controles ADSR", juce::dontSendNotification);
+    reverbTitleLabel.setText("Controles de Reverb", juce::dontSendNotification);
+
+    waveformTitleLabel.setJustificationType(juce::Justification::centred);
+    adsrTitleLabel.setJustificationType(juce::Justification::centred);
+    reverbTitleLabel.setJustificationType(juce::Justification::centred);
+
+    int y = 50;
+
+    setSize(800, y + controlHeight + 500);
+
+    // Waveform y volumen
+    waveformTitleLabel.setBounds(0, y, getWidth(), titleHeight);
+    y += titleHeight + 10;
+
+    int selectorWidth = 180;
+    waveformSelector.setBounds((getWidth() - selectorWidth) / 2, y, selectorWidth, controlHeight);
+    y += controlHeight + 10;
+
+    int volumeSliderWidth = 300;
+    volumeSlider.setBounds((getWidth() - volumeSliderWidth) / 2, y, volumeSliderWidth, controlHeight);
+    y += controlHeight + 30;
+
+    // ADSR
+    adsrTitleLabel.setBounds(0, y, getWidth(), titleHeight);
+    y += titleHeight + 10;
+
+    int adsrSliderSize = 100;
+    int adsrSpacing = 30;
     int adsrTotalWidth = 4 * adsrSliderSize + 3 * adsrSpacing;
     int adsrStartX = (getWidth() - adsrTotalWidth) / 2;
+    int adsrTop = y;
 
     auto placeADSRSlider = [adsrTop, adsrSliderSize](juce::Slider& s, juce::Label& l, int x) {
         s.setBounds(x, adsrTop, adsrSliderSize, adsrSliderSize);
@@ -125,28 +189,33 @@ void SynthAudioProcessorEditor::resized()
     placeADSRSlider(sustainSlider, sustainLabel, adsrStartX + 2 * (adsrSliderSize + adsrSpacing));
     placeADSRSlider(releaseSlider, releaseLabel, adsrStartX + 3 * (adsrSliderSize + adsrSpacing));
 
-    // Reverb Sliders
+    y = adsrTop + adsrSliderSize + 40;
 
-    int reverbSliderSize = 70;
-    int reverbSpacing = 10;
-    int reverbRow1Y = adsrTop + adsrSliderSize + 50;
-    int reverbRow2Y = reverbRow1Y + reverbSliderSize + 30;
-    int reverbStartX = 20;
+    // Reverb
+    reverbTitleLabel.setBounds(0, y, getWidth(), titleHeight);
+    y += titleHeight + 10;
 
-    reverbToggleButton.setBounds(400, 70, 150, 25);
+    int numReverbSliders = 6;
+    int reverbSliderSize = 90;
+    int reverbSpacing = (getWidth() - 2 * margin - numReverbSliders * reverbSliderSize) / (numReverbSliders - 1);
+    int reverbTop = y;
+    int reverbX = margin;
 
-    auto placeReverbSlider = [reverbSliderSize](juce::Slider& s, juce::Label& l, int x, int y) {
-        s.setBounds(x, y, reverbSliderSize, reverbSliderSize);
-        l.setBounds(x, y + reverbSliderSize, reverbSliderSize, 20);
+    auto placeReverbSlider = [reverbSliderSize, reverbTop](juce::Slider& s, juce::Label& l, int x) {
+        s.setBounds(x, reverbTop, reverbSliderSize, reverbSliderSize);
+        l.setBounds(x, reverbTop + reverbSliderSize, reverbSliderSize, 20);
         };
 
-    placeReverbSlider(reverbRoomSlider, reverbRoomLabel, reverbStartX, reverbRow1Y);
-    placeReverbSlider(reverbDampingSlider, reverbDampingLabel, reverbStartX + (reverbSliderSize + reverbSpacing), reverbRow1Y);
-    placeReverbSlider(reverbWetSlider, reverbWetLabel, reverbStartX + 2 * (reverbSliderSize + reverbSpacing), reverbRow1Y);
+    placeReverbSlider(reverbRoomSlider, reverbRoomLabel, reverbX); reverbX += reverbSliderSize + reverbSpacing;
+    placeReverbSlider(reverbDampingSlider, reverbDampingLabel, reverbX); reverbX += reverbSliderSize + reverbSpacing;
+    placeReverbSlider(reverbWetSlider, reverbWetLabel, reverbX); reverbX += reverbSliderSize + reverbSpacing;
+    placeReverbSlider(reverbDrySlider, reverbDryLabel, reverbX); reverbX += reverbSliderSize + reverbSpacing;
+    placeReverbSlider(reverbWidthSlider, reverbWidthLabel, reverbX); reverbX += reverbSliderSize + reverbSpacing;
+    placeReverbSlider(reverbFreezeSlider, reverbFreezeLabel, reverbX);
 
-    placeReverbSlider(reverbDrySlider, reverbDryLabel, reverbStartX, reverbRow2Y);
-    placeReverbSlider(reverbWidthSlider, reverbWidthLabel, reverbStartX + (reverbSliderSize + reverbSpacing), reverbRow2Y);
-    placeReverbSlider(reverbFreezeSlider, reverbFreezeLabel, reverbStartX + 2 * (reverbSliderSize + reverbSpacing), reverbRow2Y);
+    reverbToggleButton.setBounds(getWidth() - margin - 150, reverbTop + reverbSliderSize + 30, 150, controlHeight);
+
+
 }
 
 //==============================================================================
@@ -159,7 +228,7 @@ void SynthAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 
     if (slider == &attackSlider || slider == &decaySlider || slider == &sustainSlider || slider == &releaseSlider)
     {
-        audioProcessor.setADSRParameters(
+        audioProcessor.setCurrentADSRParameters(
             attackSlider.getValue(),
             decaySlider.getValue(),
             sustainSlider.getValue(),
@@ -170,7 +239,7 @@ void SynthAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 		slider == &reverbWetSlider || slider == &reverbDrySlider ||
 		slider == &reverbWidthSlider || slider == &reverbFreezeSlider)
 	{
-        audioProcessor.setReverbParameters(
+        audioProcessor.setCurrentReverbParameters(
             reverbRoomSlider.getValue(),
             reverbDampingSlider.getValue(),
             reverbWetSlider.getValue(),

@@ -4,6 +4,9 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
               pluginName="MIPLUGIN">
   <MAINGROUP id="E0kt9r" name="Synth">
+    <GROUP id="{91FB9137-8381-285C-B15A-F5069D6CA853}" name="Resources">
+      <FILE id="e8EvIQ" name="TrashHand.TTF" compile="0" resource="1" file="../../../Users/jrrro/Downloads/trashhand/TrashHand.TTF"/>
+    </GROUP>
     <GROUP id="{C9AECDF3-C259-5D78-0561-B59A25BD5FFE}" name="Source">
       <FILE id="q9tkt4" name="SynthSound.h" compile="0" resource="0" file="Source/SynthSound.h"/>
       <FILE id="vYPixE" name="SynthVoice.cpp" compile="1" resource="0" file="Source/SynthVoice.cpp"/>
